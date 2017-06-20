@@ -63,7 +63,7 @@ make dist
 
 Assuming that URB build (`make`) succeeded following commands will start redis server and URB service:
 
-`source/cpp/3rdparty/redis/build/redis-2.8.18/src/redis-server&` - start redis server in background
+`urb-core/source/cpp/3rdparty/redis/build/redis-2.8.18/src/redis-server&` - start redis server in background
 
 `cd urb-core/source/python`
 
@@ -81,8 +81,29 @@ Following command will start Mesos C++ example framework with 50 tasks that ping
 
 Grid Engine jobs submission as a result of Mesos tasks deployment on the cluster can be monitored in separate guest shell session with `watch -n1 qstat -f`.
 
-Following command will start Mesos Python example framework with 50 tasks that ping-pong a message with the framework:
+Following commands will start Mesos Python example framework with 50 tasks that ping-pong a message with the framework:
 
-`. venv/bin/activate`
+```
+. venv/bin/activate
+LD_LIBRARY_PATH=/scratch/urb/urb-core/source/cpp/liburb/build /scratch/urb/urb-core/source/cpp/liburb/python-bindings/test/test_framework.py urb://$(hostname)
+deactivate
+```
 
-`LD_LIBRARY_PATH=/scratch/urb/urb-core/source/cpp/liburb/build /scratch/urb/urb-core/source/cpp/liburb/python-bindings/test/test_framework.py urb://$(hostname)`
+## Cleaning/Erasing development environment
+
+Shutdown the environment by running the following command on the host:
+
+```
+cd urb-core/vagrant
+vagrant halt
+```
+
+If you want to completely remove development environment and underlying docker image run:
+
+```
+cd urb-core/vagrant
+vagrant destroy
+make clean
+```
+
+This will remove all traces of the machine from the host system.
