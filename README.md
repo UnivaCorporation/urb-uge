@@ -16,7 +16,7 @@ cd urb-core/vagrant
 make
 ```
 
-## In order to run test Mesos frameworks which are part of this project (or actual Mesos frameworks which can be installed separately) Univa Grid Engine has to be a part of this development environment. Trial version of UGE can be downloaded from [univa.com](univa.com) and copied to `uge` directory (see [uge/README.md](uge/README.md)). It will be installed in one of the subsequent steps. Without UGE the project still can be built but none of the Mesos frameworks can be run (as well as some of the test steps which rely on UGE to be present will fail).
+In order to run test Mesos frameworks which are part of this project (or actual Mesos frameworks which can be installed separately) Univa Grid Engine has to be a part of this development environment. Trial version of UGE can be downloaded from [univa.com](univa.com) and copied to `uge` directory (see [uge/README.md](uge/README.md)). It will be installed in one of the subsequent steps. Without UGE the project still can be built but none of the Mesos frameworks can be run (as well as some of the test steps which rely on UGE to be present will fail).
 
 ## Start docker build container:
 
