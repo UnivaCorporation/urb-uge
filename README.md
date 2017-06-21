@@ -21,7 +21,7 @@ In order to run test Mesos frameworks which are part of this project (or actual 
 ## Start docker build container:
 
 ```
-SYNCED_FOLDER=../.. vagrant up
+SYNCED_FOLDER=../.. vagrant up --provider=docker
 ```
 
 ## Login into docker build container:
