@@ -42,6 +42,9 @@ dist_urb_uge:   $(DIST_DIR)/../.dummy
 urb_core_dist:
 	cd urb-core && $(MAKE) dist
 
+distclean:
+	rm -rf dist
+
 # Make all of the dist directories
 $(DIST_DIR)/../.dummy:
 	rm -rf $(DIST_DIR)

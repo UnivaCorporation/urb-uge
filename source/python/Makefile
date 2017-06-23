@@ -53,7 +53,7 @@ test: $(UGE_ADAPTER_INIT)
 	if [ "`$(REDIS_BIN)/redis-cli ping`" = "PONG" ]; then $(REDIS_BIN)/redis-cli flushdb; $(REDIS_BIN)/redis-cli shutdown; fi
 
 clean:
-	rm -rf build *.egg-info `find . -name '*.pyc'` urb/__init__.py
+	rm -rf build *.egg-info `find . -name '*.pyc'` $(UGE_ADAPTER_INIT)
 
 tidy: clean
 	rm -rf dist
