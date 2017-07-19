@@ -17,7 +17,6 @@ from urb.adapters.adapter_interface import Adapter
 from urb.messaging.channel_factory import ChannelFactory
 from gridengine import GridEngine
 from urb.log.log_manager import LogManager
-from urb.utility.job_tracker import JobTracker
 from urb.config.config_manager import ConfigManager
 from urb.exceptions.unknown_job import UnknownJob
 from urb.utility.value_utility import ValueUtility
