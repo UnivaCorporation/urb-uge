@@ -287,14 +287,14 @@ class UGEAdapter(Adapter):
         self.logger.debug('Unregister framework: %s' % framework['name'])
         self.delete_jobs_delay(framework)
 
-    def __delete_jobs_delay(self, framework):
+    def delete_jobs_delay(self, framework):
         # Delete all of the uge jobs
         uge_ids = framework.get('job_ids')
         if uge_ids is not None:
             # Spawn job to make sure the actual executors exit...
             gevent.spawn(self.delete_jobs, uge_ids)
 
-    def __delete_jobs(self, job_ids):
+    def delete_jobs(self, job_ids):
         jobs_id_list = [str(j[0]) for j in job_ids]
         jobs_str = ",".join(jobs_id_list)
         try:
@@ -302,7 +302,7 @@ class UGEAdapter(Adapter):
         except Exception, ex:
             self.logger.warn("Error deleteing job: %s" % ex)
 
-    def __delete_job(self, job_id):
+    def delete_job(self, job_id):
         self.logger.debug('Deleting job: %s', job_id)
         if len(str(job_id)) != 0:
             try:
