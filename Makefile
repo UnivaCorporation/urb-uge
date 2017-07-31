@@ -50,3 +50,8 @@ $(DIST_DIR)/../.dummy:
 	rm -rf $(DIST_DIR)
 	mkdir -p $(DIST_DIR)/bin
 	mkdir -p $(DIST_DIR)/pkg
+
+env:
+	echo "URB_VERSION=$(URB_VERSION)"
+	echo "VERSION=$(VERSION)"
+	cd urb-core; make env
