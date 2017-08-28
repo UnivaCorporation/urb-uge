@@ -101,88 +101,92 @@ class UGEAdapter(Adapter):
         docker_args = None
         if task is not None:
             if 'container' in task:
-                if 'type' in task['container']['type'] and task['container']['type'] != 'DOCKER':
-                    self.logger.error("Only DOCKER container type is supported")
-                elif 'image' not in task['container']['docker']:
-                    self.logger.error("Container image is not specified")
-                else:
-                    # -soft enables downloading remote images but requires tag
-                    # make sure that not -q or -l options appended after it so they
-                    # do not become soft requirements
-                    image = task['container']['docker']['image']
-                    pos = image.rfind('/')
-                    if pos != -1:
-                        pos = image.rfind(':', pos)
+                self.logger.debug("container: %s" % task['container'])
+                container_type = task['container'].get('type')
+                if container_type is not None and container_type == 'DOCKER':
+                    docker = task['container'].get('docker')
+                    if docker is not None and 'image' in docker:
+                        # -soft enables downloading remote images but requires tag
+                        # make sure that not -q or -l options appended after it so they
+                        # do not become soft requirements
+                        image = docker['image']
+                        pos = image.rfind('/')
+                        if pos != -1:
+                            pos = image.rfind(':', pos)
+                        else:
+                            pos = image.rfind(':')
+                        if pos == -1:
+                            image += ':latest'
+
+                        docker_args = '-l docker -soft -l docker_images=*%s*' % image
+
+                        if 'network' in task['container']['docker']:
+                            network = task['container']['docker']['network']
+                            docker_args += ' -xd --net=%s' % network.lower()
+
+                        if 'port_mappings' in task['container']['docker']:
+                            for port_mapping in task['container']['docker']['port_mappings']:
+                                host_port = port_mapping['host_port']
+                                container_port = port_mapping['container_port']
+                                docker_args += ' -xd --publish=%s:%s' % (host_port, container_port)
+                                if 'protocol' in port_mapping:
+                                    protocol = port_mapping['protocol']
+                                    docker_args += '/%s' % protocol
+
+                        if 'privileged' in task['container']['docker']:
+                            privileged = task['container']['docker']['privileged']
+                            if privileged == True:
+                                docker_args += ' -xd --privileged'
+
+                        parameters = task['container']['docker'].get('parameters', [])
+                        for parameter in parameters:
+                            key = parameter['key']
+                            value = parameter['value']
+                            docker_args += ' -xd --%s=%s' % (key, value)
+
+                        force_pull_image = True if 'force_pull_image' in task['container']['docker'] else False
+
+                        #volume_driver = task['container']['docker'].get('volume_driver', '')
+
+                        uge_root = self.get_uge_root()
+                        # mount user home directory
+                        user_home = os.path.expanduser('~' + user)
+                        docker_args += ' -xd --volume=%s:%s:rw' % (user_home, user_home)
+                        # mount URB root directory
+                        docker_args += ' -xd --volume=%s:%s:rw' % (self.urb_root, self.urb_root)
+                        # mount UGE root directory
+                        docker_args += ' -xd --volume=%s:%s:rw' % (uge_root, uge_root)
+
+                        if 'volumes' in task['container']:
+                            for volume in task['container']['volumes']:
+                                container_path = volume.get('container_path', '')
+                                host_path = volume.get('host_path', container_path)
+                                mode = volume.get('mode', 'rw').lower()
+                                docker_args += ' -xd --volume=%s:%s:%s' % (host_path, container_path, mode)
+
+                        if 'hostname' in task['container']:
+                            docker_args += ' -xd --hostname=%s' % task['container']['hostname']
+
+                        network_infos = task['container'].get('network_infos', [])
+                        for network_info in network_infos:
+                            for ip_address in network_info.get('ip_addresses', []):
+                                if 'ip_address' in ip_address:
+                                    ip_addr = ip_address['ip_address']
+                                    docker_args += ' -xd --ip=%s' % ip_addr
+
+                        # put UGE output files to home directory
+                        docker_args += " -o %s -e %s" % (user_home, user_home)
+
+                        # add redis host
+                        docker_args += ' -xd --add-host=%s:%s' % (self.redis_host, self.redis_ip)
+
+                        # allocate pseudo tty to be able to run sudo in container (use UGE option instead of docker -t)
+                        docker_args += ' -pty y'
+                        self.logger.debug("Docker args: %s" % docker_args)
                     else:
-                        pos = image.rfind(':')
-                    if pos == -1:
-                        image += ':latest'
-
-                    docker_args = '-l docker -soft -l docker_images=*%s*' % image
-
-                    if 'network' in task['container']['docker']:
-                        network = task['container']['docker']['network']
-                        docker_args += ' -xd --net=%s' % network.lower()
-
-                    if 'port_mappings' in task['container']['docker']:
-                        for port_mapping in task['container']['docker']['port_mappings']:
-                            host_port = port_mapping['host_port']
-                            container_port = port_mapping['container_port']
-                            docker_args += ' -xd --publish=%s:%s' % (host_port, container_port)
-                            if 'protocol' in port_mapping:
-                                protocol = port_mapping['protocol']
-                                docker_args += '/%s' % protocol
-
-                    if 'privileged' in task['container']['docker']:
-                        privileged = task['container']['docker']['privileged']
-                        if privileged == True:
-                            docker_args += ' -xd --privileged'
-
-                    parameters = task['container']['docker'].get('parameters', [])
-                    for parameter in parameters:
-                        key = parameter['key']
-                        value = parameter['value']
-                        docker_args += ' -xd --%s=%s' % (key, value)
-
-                    force_pull_image = True if 'force_pull_image' in task['container']['docker'] else False
-
-                    #volume_driver = task['container']['docker'].get('volume_driver', '')
-
-                    uge_root = self.get_uge_root()
-                    # mount user home directory
-                    user_home = os.path.expanduser('~' + user)
-                    docker_args += ' -xd --volume=%s:%s:rw' % (user_home, user_home)
-                    # mount URB root directory
-                    docker_args += ' -xd --volume=%s:%s:rw' % (self.urb_root, self.urb_root)
-                    # mount UGE root directory
-                    docker_args += ' -xd --volume=%s:%s:rw' % (uge_root, uge_root)
-
-                    if 'volumes' in task['container']:
-                        for volume in task['container']['volumes']:
-                            container_path = volume.get('container_path', '')
-                            host_path = volume.get('host_path', container_path)
-                            mode = volume.get('mode', 'rw').lower()
-                            docker_args += ' -xd --volume=%s:%s:%s' % (host_path, container_path, mode)
-
-                    if 'hostname' in task['container']:
-                        docker_args += ' -xd --hostname=%s' % task['container']['hostname']
-
-                    network_infos = task['container'].get('network_infos', [])
-                    for network_info in network_infos:
-                        for ip_address in network_info.get('ip_addresses', []):
-                            if 'ip_address' in ip_address:
-                                ip_addr = ip_address['ip_address']
-                                docker_args += ' -xd --ip=%s' % ip_addr
-
-                    # put UGE output files to home directory
-                    docker_args += " -o %s -e %s" % (user_home, user_home)
-
-                    # add redis host
-                    docker_args += ' -xd --add-host=%s:%s' % (self.redis_host, self.redis_ip)
-
-                    # allocate pseudo tty to be able to run sudo in container (use UGE option instead of docker -t)
-                    docker_args += ' -pty y'
-                    self.logger.debug("Docker args: %s" % docker_args)
+                        self.logger.error("Container image is not specified")
+                else:
+                    self.logger.debug("Not DOCKER container type: %s" % container_type)
 
             resources = task.get('resources')
             resource_mapping = kwargs.get('resource_mapping')
@@ -224,10 +228,8 @@ class UGEAdapter(Adapter):
         return self.__submit_jobs(job_class, max_tasks,
             concurrent_tasks, job_submit_options, framework_env, user)
 
-    def __submit_jobs(self, job_class, max_tasks,
-            concurrent_tasks, job_submit_options, env, user=None):
+    def __submit_jobs(self, job_class, max_tasks, concurrent_tasks, job_submit_options, env, user=None):
         uge_cmd = '-clear -v %s -terse -jc %s' % (" -v ".join([k+"="+v for k, v in env.items()]), job_class)
-
         if job_submit_options is not None and len(job_submit_options) > 0:
             uge_cmd = '%s %s' % (uge_cmd, job_submit_options)
         uge_ids = []
