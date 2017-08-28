@@ -71,7 +71,8 @@ class UGEAdapter(Adapter):
     def reconcile_tasks(self, request):
         self.logger.trace('Reconcile tasks: %s' % request)
         # indicate that job status reasonably can be retrieved on adapter level (get_job_status)
-        return True
+        # after some time
+        return (True, 2)
 
     def register_executor_runner(self, framework_id, slave_id, *args, 
             **kwargs):
