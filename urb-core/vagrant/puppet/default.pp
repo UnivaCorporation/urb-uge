@@ -44,6 +44,10 @@ package { 'file':
   ensure => 'installed',
 }
 
+package { 'patch':
+  ensure => 'installed',
+}
+
 package { 'unzip':
   ensure => 'installed',
 }
@@ -69,6 +73,10 @@ package { "python-setuptools":
 }
 
 package { "python-virtualenv":
+  ensure => "installed"
+}
+
+package { "python-pip":
   ensure => "installed"
 }
 
