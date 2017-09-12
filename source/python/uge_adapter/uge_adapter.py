@@ -87,19 +87,55 @@ class UGEAdapter(Adapter):
             self.logger.error("UGEAdapter: job class is not defined")
             return
         self.logger.debug('Job class: %s' % job_class)
+        options = []
         job_submit_options = kwargs.get("job_submit_options")
         # remove spaces if any from the beginning and end
-        job_submit_options = job_submit_options.strip()
-        if '-cwd' in job_submit_options:
-            self.logger.info('UGE option -cwd filtered out form job_submit_options')
-            job_submit_options = job_submit_options.replace('-cwd', '')
-        if '-wd' in job_submit_options:
-            self.logger.info('UGE option -wd filtered out form job_submit_options')
-            job_submit_options = re.sub('-wd\s+(.+?)(\.[^.]*\s|\s)', '', job_submit_options)
+        if job_submit_options:
+            job_submit_options = job_submit_options.strip()
+            if '-cwd' in job_submit_options:
+                self.logger.info('UGE option -cwd filtered out form job_submit_options')
+                job_submit_options = job_submit_options.replace('-cwd', '')
+            if '-wd' in job_submit_options:
+                self.logger.info('UGE option -wd filtered out form job_submit_options')
+                job_submit_options = re.sub('-wd\s+(.+?)(\.[^.]*\s|\s)', '', job_submit_options)
+            if len(job_submit_options) != 0:
+                options.append(job_submit_options)
 
         task = kwargs.get('task')
-        docker_args = None
         if task is not None:
+            resources = task.get('resources')
+            resource_mapping = kwargs.get('resource_mapping')
+            if resources is not None and len(resource_mapping) > 0 and resource_mapping != 'none':
+                resourse_options = []
+                mem = None
+                slots = None
+                for resource in resources:
+                    if resource['name'] == 'mem':
+                        mem = int(resource['scalar']['value'])
+                    elif resource['name'] == 'cpus':
+                        cpus = float(resource['scalar']['value'])
+                        if cpus >= 1.5:
+                            slots = int(round(cpus))
+
+                if slots is not None:
+                    if resource_mapping == 'soft':
+                        self.logger.debug("For soft resource mapping parallel environment will not be used")
+                    elif resource_mapping == 'hard':
+                        resourse_options.append("-pe URBDefaultPE %s" % str(slots))
+                    else:
+                        self.logger.warn('Incorrect resource_mapping specifier: %s' % resource_mapping)
+                if mem is not None:
+                    if resource_mapping == 'soft':
+                        resourse_options.append("-soft -l m_mem_free=%sM" % mem)
+                    elif resource_mapping == 'hard':
+                        # scale down to number of slots
+                        if slots is not None:
+                            mem = int(round(mem/slots))
+                        resourse_options.append("-hard -l m_mem_free=%sM" % mem)
+                    else:
+                        self.logger.warn('Incorrect resource_mapping specifier: %s' % resource_mapping)
+                options.extend(resourse_options)
+
             if 'container' in task:
                 self.logger.debug("container: %s" % task['container'])
                 container_type = task['container'].get('type')
@@ -183,55 +219,18 @@ class UGEAdapter(Adapter):
                         # allocate pseudo tty to be able to run sudo in container (use UGE option instead of docker -t)
                         docker_args += ' -pty y'
                         self.logger.debug("Docker args: %s" % docker_args)
+                        options.append(docker_args)
                     else:
                         self.logger.error("Container image is not specified")
                 else:
                     self.logger.debug("Not DOCKER container type: %s" % container_type)
 
-            resources = task.get('resources')
-            resource_mapping = kwargs.get('resource_mapping')
-            if resources is not None and len(resource_mapping) > 0 and resource_mapping != 'none':
-                mem = None
-                slots = None
-                for resource in resources:
-                    if resource['name'] == 'mem':
-                        mem = int(resource['scalar']['value'])
-                    elif resource['name'] == 'cpus':
-                        cpus = float(resource['scalar']['value'])
-                        if cpus >= 1.5:
-                            slots = int(round(cpus))
+        return self.__submit_jobs(job_class, max_tasks, concurrent_tasks, options, framework_env, user)
 
-                if slots is not None:
-                    if resource_mapping == 'soft':
-                        self.logger.debug("For soft resource mapping parallel environment will not be used")
-                    elif resource_mapping == 'hard':
-                        job_submit_options += " -pe URBDefaultPE %s" % str(slots)
-                    else:
-                        self.logger.warn('Incorrect resource_mapping specifier: %s' % resource_mapping)
-                if mem is not None:
-                    if resource_mapping == 'soft':
-                        job_submit_options += " -soft -l m_mem_free=%sM" % mem
-                    elif resource_mapping == 'hard':
-                        # scale down to number of slots
-                        if slots is not None:
-                            mem = int(round(mem/slots))
-                        job_submit_options += " -hard -l m_mem_free=%sM" % mem
-                    else:
-                        self.logger.warn('Incorrect resource_mapping specifier: %s' % resource_mapping)
-
-        # job_submit_options are prepended since docker_params contains -soft option
-        if docker_args is not None:
-            if len(job_submit_options) != 0:
-                job_submit_options += " "
-            job_submit_options += docker_args
-
-        return self.__submit_jobs(job_class, max_tasks,
-            concurrent_tasks, job_submit_options, framework_env, user)
-
-    def __submit_jobs(self, job_class, max_tasks, concurrent_tasks, job_submit_options, env, user=None):
+    def __submit_jobs(self, job_class, max_tasks, concurrent_tasks, options, env, user=None):
         uge_cmd = '-clear -v %s -terse -jc %s' % (" -v ".join([k+"="+v for k, v in env.items()]), job_class)
-        if job_submit_options is not None and len(job_submit_options) > 0:
-            uge_cmd = '%s %s' % (uge_cmd, job_submit_options)
+        if len(options) > 0:
+            uge_cmd = "%s %s" % (uge_cmd, " ".join(options))
         uge_ids = []
         for i in range(0,concurrent_tasks):
             if i >= max_tasks:
