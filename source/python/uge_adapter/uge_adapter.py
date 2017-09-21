@@ -426,6 +426,9 @@ class UGEAdapter(Adapter):
                     mem_average += task_mem_average
         return {'cpu_average' : cpu_average, 'mem_average' : mem_average}
 
+    def config_update(self):
+        self.logger.debug("Configuration update")
+
     def get_uge_root(self):
         return self.uge.get_uge_root()
 
