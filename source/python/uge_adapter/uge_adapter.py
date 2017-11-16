@@ -101,9 +101,12 @@ class UGEAdapter(Adapter):
             if len(job_submit_options) != 0:
                 options.append(job_submit_options)
 
-        task = kwargs.get('tasks')
+        tasks = kwargs.get('tasks')
         if tasks is not None:
-            resources = tasks[0].get('resources')
+            if len(tasks) > 1:
+                self.logger.warn("multiple tasks per submission")
+            task = tasks[0]
+            resources = task.get('resources')
             resource_mapping = kwargs.get('resource_mapping')
             if resources is not None and len(resource_mapping) > 0 and resource_mapping != 'none':
                 resourse_options = []
