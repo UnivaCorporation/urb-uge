@@ -20,7 +20,7 @@ ifeq ($(DEBUG_BUILD),)
 # disable debug flags by setting empty variable, jmalloc flags taken from underlying makefile
 REDIS_DEBUG_ENV= DEBUG_FLAGS= JEMALLOC_CFLAGS="-std=gnu99 -Wall -pipe -O3 -funroll-loops $(CFLAGS)"
 else
-JEMALLOC_CFLAGS="-std=gnu99 -Wall -pipe -g3 -O3 -funroll-loops $(CFLAGS)"
+REDIS_DEBUG_ENV= JEMALLOC_CFLAGS="-std=gnu99 -Wall -pipe -g3 -O3 -funroll-loops $(CFLAGS)" CFLAGS="-g3 -O0 $(CFLAGS)"
 endif
 
 distclean: clean
@@ -37,7 +37,7 @@ $(BUILDDIR)/.dummy:
 
 $(BUILDDIR)/$(REDIS_NAME)/src/redis-server: $(REDIS_ARCHIVE)
 	$(TAR) xzvf $< -C $(BUILDDIR)
-	sed -i 's/^JEMALLOC_CFLAGS.*$$/JEMALLOC_CFLAGS+=$$(CFLAGS)/' $(BUILDDIR)/$(REDIS_NAME)/deps/Makefile
+	$(SED) -i 's/^JEMALLOC_CFLAGS.*$$/JEMALLOC_CFLAGS+=$$(CFLAGS)/' $(BUILDDIR)/$(REDIS_NAME)/deps/Makefile
 	cd $(BUILDDIR)/$(REDIS_NAME) && $(REDIS_DEBUG_ENV) $(MAKE) REDIS_LDFLAGS="-lrt"
 	
 dist: $(DIST_DIR)/.dummy $(BUILDDIR)/.dummy $(DIST_DIR)/bin/redis-server
