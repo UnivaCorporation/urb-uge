@@ -47,7 +47,7 @@ sdist: $(UGE_ADAPTER_INIT)
 
 test: $(UGE_ADAPTER_INIT)
 	-qconf -djc TestFramework_`hostname`
-	if [ "`$(REDIS_BIN)/redis-cli ping`" != "PONG" ]; then $(REDIS_BIN)/redis-server --protected-mode no& fi
+	if [ "`$(REDIS_BIN)/redis-cli ping`" != "PONG" ]; then $(REDIS_BIN)/redis-server --protected-mode no & sleep 3; fi
 	$(SETUP_ENV) URB_CONFIG_FILE=`pwd`/test/urb.conf $(PYTHON) setup.py nosetests -w test
 	$(SETUP_ENV) URB_CONFIG_FILE=`pwd`/test/urb.conf $(PYTHON) setup.py nosetests -w ../../urb-core/source/python/ext_test
 	if [ "`$(REDIS_BIN)/redis-cli ping`" = "PONG" ]; then $(REDIS_BIN)/redis-cli flushdb; $(REDIS_BIN)/redis-cli shutdown; fi
