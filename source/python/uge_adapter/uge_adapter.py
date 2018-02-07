@@ -26,6 +26,7 @@ import json
 import time
 import socket
 import os
+import re
 
 class UGEAdapter(Adapter):
     """ UGE Adapter class. """
