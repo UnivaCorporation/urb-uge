@@ -98,7 +98,7 @@ class UGEAdapter(Adapter):
                 job_submit_options = job_submit_options.replace('-cwd', '')
             if '-wd' in job_submit_options:
                 self.logger.info('UGE option -wd filtered out form job_submit_options')
-                job_submit_options = re.sub('-wd\s+(.+?)(\.[^.]*\s|\s)', '', job_submit_options)
+                job_submit_options = re.sub('-wd\s+(.+?)(\.[^.]*\s|\s|$)', '', job_submit_options)
             if len(job_submit_options) != 0:
                 options.append(job_submit_options)
 
