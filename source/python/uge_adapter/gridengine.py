@@ -279,7 +279,7 @@ class GridEngine(object):
                p = subprocess.Popen(cmdl, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                so,se = p.communicate()
             except:
-               errmsg = "Got exception while invoking " + " ".join(cmdl)
+               errmsg = "With sudo: got exception while invoking " + " ".join(cmdl)
                return "", errmsg, 2
          else:
             set_user = "nobody"
@@ -305,7 +305,7 @@ class GridEngine(object):
                                     env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                so,se = p.communicate()
             except:
-               errmsg = "Got exception while invoking " + " ".join(cmdl)
+               errmsg = "Without sudo: got exception while invoking " + " ".join(cmdl)
                return "", errmsg, 2
 
          # Check for error codes
