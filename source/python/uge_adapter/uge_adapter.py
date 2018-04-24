@@ -19,6 +19,7 @@ from gridengine import GridEngine
 from urb.log.log_manager import LogManager
 from urb.config.config_manager import ConfigManager
 from urb.exceptions.unknown_job import UnknownJob
+from urb.exceptions.pending_job import PendingJob
 from urb.utility.value_utility import ValueUtility
 import gevent
 import xmltodict
@@ -370,8 +371,12 @@ class UGEAdapter(Adapter):
         job_status_dict = json.loads(json.dumps(job_status_dict))
         if job_status_dict.get('unknown_jobs') is not None:
             raise UnknownJob('Unknown job id: %s' % job_id)
-        
+
         self.logger.trace('Job status: %s', job_status_dict)
+
+        if not job_status_dict.get('detailed_job_info').get('djob_info').get('element').get('JB_ja_tasks'):
+            raise PendingJob('Pending job: %s' % job_id)
+
         return job_status_dict
 
     def get_job_accounting(self, job_id):
