@@ -110,10 +110,13 @@ class UGEAdapter(Adapter):
             task = tasks[0]
             resources = task.get('resources')
             resource_mapping = kwargs.get('resource_mapping')
-            if resources is not None and len(resource_mapping) > 0 and resource_mapping != 'none':
+            if resources is not None and len(resource_mapping) > 0:
+                resource_mapping_list = resource_mapping.split(';')
+                self.logger.debug("resource_mapping_list=%s" % resource_mapping_list)
                 resourse_options = []
                 mem = None
                 slots = None
+                gpus = None
                 for resource in resources:
                     if resource['name'] == 'mem':
                         mem = int(resource['scalar']['value'])
@@ -121,24 +124,59 @@ class UGEAdapter(Adapter):
                         cpus = float(resource['scalar']['value'])
                         if cpus >= 1.5:
                             slots = int(round(cpus))
+                    elif resource['name'] == 'gpus':
+                        gpus = int(resource['scalar']['value'])
 
                 if slots is not None:
-                    if resource_mapping == 'soft':
+                    if 'soft' in resource_mapping_list:
                         self.logger.debug("For soft resource mapping parallel environment will not be used")
-                    elif resource_mapping == 'hard':
+                    elif 'hard' in resource_mapping_list:
                         resourse_options.append("-pe URBDefaultPE %s" % str(slots))
-                    else:
-                        self.logger.warn('Incorrect resource_mapping specifier: %s' % resource_mapping)
                 if mem is not None:
-                    if resource_mapping == 'soft':
+                    if 'soft' in resource_mapping_list:
                         resourse_options.append("-soft -l m_mem_free=%sM" % mem)
-                    elif resource_mapping == 'hard':
+                    elif 'hard' in resource_mapping_list:
                         # scale down to number of slots
                         if slots is not None:
                             mem = int(round(mem/slots))
                         resourse_options.append("-hard -l m_mem_free=%sM" % mem)
+                if gpus is not None:
+                    rsmap = None
+                    for l in resource_mapping_list:
+                        self.logger.debug("gpus l=%s" % l)
+                        if l.startswith("gpus:"):
+                            rsmap = l[5:]
+                            self.logger.debug("rsmap=%s" % rsmap)
+                            break
+                    if rsmap:
+                        resourse_options.append("-hard -l %s=%d" % (rsmap, gpus))
                     else:
-                        self.logger.warn('Incorrect resource_mapping specifier: %s' % resource_mapping)
+                        self.logger.error("Cannot find 'gpus' specifier for UGE RSMAP in resource_mapping")
+                        return []
+
+                for r in [ "soft", "hard" ]:
+                    resource_mapping_list.remove(r)
+
+                for custom_resource in kwargs.get("custom_resources", {}):
+                    for rm in resource_mapping_list:
+                        self.logger.debug("custom_resource=%s, rm=%s" % (custom_resource, rm))
+                        rm_elements = rm.split(':')
+                        rm_len = len(rm_elements)
+                        idx = 0
+                        name = rm_elements[idx] if idx < rm_len else None
+                        if custom_resource != name:
+                            continue
+                        idx = idx + 1
+                        rsmap = rm_elements[idx] if idx < rm_len else None
+                        if not rsmap:
+                            continue
+                        idx = idx + 1
+                        val = rm_elements[idx] if idx < rm_len else None
+                        if not val:
+                            val = "1"
+                        self.logger.debug("name=%s, rsmap=%s, val=%s" % (name, rsmap, val))
+                        resourse_options.append("-hard -l %s=%s" % (rsmap, val))
+
                 options.extend(resourse_options)
 
             if 'container' in task:
