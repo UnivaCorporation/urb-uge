@@ -396,7 +396,7 @@ class UGEAdapter(Adapter):
         return uge_id
 
     def get_job_status(self, job_id):
-        self.logger.debug('Getting status for job: %s', job_id)
+        self.logger.info('Getting status for job: %s', job_id)
         status = self.uge.qstat('-j %s -xml' % str(job_id))
 
         # Parse xml
@@ -418,7 +418,7 @@ class UGEAdapter(Adapter):
         return job_status_dict
 
     def get_job_accounting(self, job_id):
-        self.logger.debug('Getting accounting for job: %s', job_id)
+        self.logger.info('Getting accounting for job: %s', job_id)
         acct = {}
         try:
             acct_str = self.uge.qacct('-j %s' % str(job_id))
