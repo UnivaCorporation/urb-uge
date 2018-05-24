@@ -45,7 +45,7 @@ def test_job_management():
     assert job_id != None
     gevent.sleep(3)
     print 'Job status: ', adapter.get_job_status(job_id)
-    gevent.spawn(adapter.delete_job, job_id)
+    gevent.spawn(adapter.delete_jobs, [job_id])
     gevent.sleep(3)
     print 'Deleted job: ', job_id
 
