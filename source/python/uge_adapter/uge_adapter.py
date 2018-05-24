@@ -337,32 +337,33 @@ class UGEAdapter(Adapter):
         uge_ids = framework.get('job_ids')
         if uge_ids is not None:
             # Spawn job to make sure the actual executors exit...
-            gevent.spawn(self.delete_jobs, uge_ids)
+            gevent.spawn(self.delete_jobs_tuple, uge_ids)
 
-    def delete_jobs(self, job_ids):
+    def delete_jobs_tuple(self, job_ids):
+        # take an id as first element of the tuple
         jobs_id_list = [str(j[0]) for j in job_ids]
-        jobs_str = ",".join(jobs_id_list)
         try:
-            self.delete_job(jobs_str)
+            self.delete_jobs(jobs_id_list)
         except Exception, ex:
             self.logger.warn("Error deleteing job: %s" % ex)
 
-    def delete_job(self, job_id):
-        self.logger.debug('Deleting job: %s', job_id)
-        if len(str(job_id)) != 0:
+    def delete_jobs(self, job_ids):
+        self.logger.debug('Deleting jobs: %s', job_ids)
+        jobs_str = ",".join(job_ids)
+        if len(str(jobs_str)) != 0:
             try:
-                self.uge.qhold('%s' % str(job_id))
+                self.uge.qhold('%s' % jobs_str)
             except Exception, ex:
                 self.logger.warn("Error holding job: %s" % ex)
                 #self.logger.exception(ex)
             gevent.sleep(UGEAdapter.QDEL_WAIT_PERIOD_IN_SECONDS)
             try:
-                self.uge.del_cmd('%s' % str(job_id))
+                self.uge.del_cmd('%s' % jobs_str)
             except Exception, ex:
                 self.logger.warn("Error calling qdel: %s" % ex)
                 #self.logger.exception(ex)
         else:
-            self.logger.warn("Deleting job: '%s' - empty job id string", job_id)
+            self.logger.warn("Deleting jobs: '%s' - empty job id string", job_ids)
 
     def submit_job(self, job_command):
         self.logger.debug('Submitting job: %s', job_command)
