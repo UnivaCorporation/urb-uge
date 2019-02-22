@@ -155,7 +155,8 @@ class UGEAdapter(Adapter):
                         return []
 
                 for r in [ "soft", "hard" ]:
-                    resource_mapping_list.remove(r)
+                    if r in resource_mapping_list:
+                        resource_mapping_list.remove(r)
 
                 for custom_resource in kwargs.get("custom_resources", {}):
                     for rm in resource_mapping_list:
