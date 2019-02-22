@@ -17,7 +17,7 @@ SHELL:=$(shell which bash)
 
 include urb-core/util/include.mk 
 
-PYPLATFORM=$(shell PATH=$(PYENV_HOME)/bin:$(PATH) python -c "from distutils.util import get_platform; print get_platform()")
+PYPLATFORM=$(shell PATH=$(PYENV_HOME)/bin:$(PATH) python -c "from distutils.util import get_platform; print(get_platform())")
 SHORT_NAME=urb
 URB_NAME=$(SHORT_NAME)-$(VERSION)
 URB_UGE_NAME=$(SHORT_NAME)-uge-$(VERSION)
