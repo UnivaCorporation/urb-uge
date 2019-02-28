@@ -269,7 +269,7 @@ class UGEAdapter(Adapter):
                 else:
                     self.logger.debug("Not DOCKER container type: %s" % container_type)
 
-        job_submit_clear = kwargs.get("job_submit_clesr", False)
+        job_submit_clear = kwargs.get("job_submit_clesr", True)
         return self.__submit_jobs(job_class, max_tasks, concurrent_tasks, options, framework_env, job_submit_clear, user)
 
     def __submit_jobs(self, job_class, max_tasks, concurrent_tasks, options, env, job_submit_clear, user=None):
