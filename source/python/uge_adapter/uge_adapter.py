@@ -286,8 +286,8 @@ class UGEAdapter(Adapter):
             self.logger.info('Submit job: user=%s, UGE command: %s' % (user, uge_cmd))
             ret_str = self.uge.sub_cmd(str(uge_cmd), use_sudo=self.use_sudo, user=user)
             self.logger.debug('Got job id string: %s' % ret_str)
-            # it may contain some extra output from jsv script, the last line should be a job id
-            job_id_str = ret_str.split('\n')[-1]
+            # it may contain some extra output from jsv script, the last non empty line should be a job id
+            job_id_str = [s for s in ret_str.split('\n') if s != ''][-1]
             parts = job_id_str.split(".",1)
             job_id = parts[0].strip()
             if len(parts) > 1:
