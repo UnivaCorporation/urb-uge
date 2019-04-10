@@ -6,6 +6,8 @@ It utilizes the [urb-core](https://github.com/UnivaCorporation/urb-core) project
 
 Please see [Universal Resource Broker core](https://github.com/UnivaCorporation/urb-core) project for more architectual details.
 
+URB can be installed in [Tortuga](https://github.com/UnivaCorporation/tortuga) environment with [tortuga-kit-urb-uge](https://github.com/UnivaCorporation/tortuga-kit-urb-uge).
+
 
 The following steps need to be done to perform a project build:
 
