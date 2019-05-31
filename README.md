@@ -1,6 +1,6 @@
 # Univa Grid Engine Adapter for Universal Resource Broker (URB)
 
-This project allows one to run [Apache Mesos](http://mesos.apache.org) frameworks ([Marathon](https://mesosphere.github.io/marathon), [Chronos](https://mesos.github.io/chronos), [Spark](https://spark.apache.org), etc.) with Universal Resource Broker on a [Univa Grid Engine](http://www.univa.com) cluster.
+This project allows one to run [Apache Mesos](http://mesos.apache.org) frameworks ([Marathon](https://mesosphere.github.io/marathon), [Chronos](https://mesos.github.io/chronos), [Spark](https://spark.apache.org), Hadoop MapReduce, etc.) with Universal Resource Broker on a [Univa Grid Engine](http://www.univa.com) cluster.
 
 It utilizes the [urb-core](https://github.com/UnivaCorporation/urb-core) project and provides a Univa Grid Engine adapter for URB.
 
