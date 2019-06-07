@@ -351,7 +351,7 @@ class UGEAdapter(Adapter):
         jobs_id_list = [str(j[0]) for j in job_ids]
         try:
             self.delete_jobs(jobs_id_list)
-        except Exception, ex:
+        except Exception as ex:
             self.logger.warn("Error deleteing job: %s" % ex)
 
     def delete_jobs(self, job_ids):
@@ -360,13 +360,13 @@ class UGEAdapter(Adapter):
         if len(str(jobs_str)) != 0:
             try:
                 self.uge.qhold('%s' % jobs_str)
-            except Exception, ex:
+            except Exception as ex:
                 self.logger.warn("Error holding job: %s" % ex)
                 #self.logger.exception(ex)
             gevent.sleep(UGEAdapter.QDEL_WAIT_PERIOD_IN_SECONDS)
             try:
                 self.uge.del_cmd('%s' % jobs_str)
-            except Exception, ex:
+            except Exception as ex:
                 self.logger.warn("Error calling qdel: %s" % ex)
                 #self.logger.exception(ex)
         else:
@@ -399,7 +399,7 @@ class UGEAdapter(Adapter):
                 self.logger.debug("Determined job id %s tuple: %s-%s:%s" % (job_id, rn_min, rn_max, rn_step))
             else:
                 self.logger.debug("Job id %s is not array job" % (job_id))
-        except Exception, ex:
+        except Exception as ex:
             self.logger.warn("Cannot determine job id %s tuple: %s" % (job_id, ex))
         return uge_id
 
@@ -439,7 +439,7 @@ class UGEAdapter(Adapter):
                     key = word_list[0]
                     value = ' '.join(word_list[1:])
                     acct[key] = value.strip()
-        except Exception, ex:
+        except Exception as ex:
             self.logger.debug('Failed to get accounting for job %s: %s' % (ex, job_id))
         return acct
 
